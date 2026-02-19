@@ -1,61 +1,87 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SectionLayout } from "@/components/layouts/section-layout";
+import {
+  ClipboardList,
+  Users,
+  CreditCard,
+  Receipt,
+  CalendarDays,
+  BarChart3,
+} from "lucide-react";
+
+const features = [
+  {
+    icon: ClipboardList,
+    title: "Suivi des commandes",
+    description: "De la prise de commande à la livraison",
+    body: "Créez des commandes, ajoutez vos articles et suivez leur avancement : en attente, en préparation ou livré.",
+  },
+  {
+    icon: Users,
+    title: "Gestion des clients",
+    description: "Votre carnet d'adresses intégré",
+    body: "Enregistrez vos clients, retrouvez leur historique de commandes et gardez leurs coordonnées à portée de main.",
+  },
+  {
+    icon: CreditCard,
+    title: "Suivi des paiements",
+    description: "Impayés, acomptes, soldés",
+    body: "Sachez en temps réel qui a payé, qui a versé un acompte et qui doit encore régler sa commande.",
+  },
+  {
+    icon: Receipt,
+    title: "Dépenses & charges",
+    description: "Gardez le contrôle de vos coûts",
+    body: "Enregistrez vos dépenses par catégorie (ingrédients, emballages, transport…) pour piloter votre marge.",
+  },
+  {
+    icon: CalendarDays,
+    title: "Vue du jour",
+    description: "Ce qui vous attend aujourd'hui",
+    body: "Visualisez d'un coup d'œil les commandes à préparer et à livrer pour la journée en cours.",
+  },
+  {
+    icon: BarChart3,
+    title: "Tableau de bord",
+    description: "Vos chiffres en un regard",
+    body: "Chiffre d'affaires, commandes du mois, dépenses : suivez la santé de votre activité facilement.",
+  },
+];
 
 export function FeaturesSection() {
   return (
-    <SectionLayout id="features">
+    <SectionLayout id="fonctionnalites">
       <div className="text-center mb-16 space-y-4">
-        <h2 className="text-3xl md:text-4xl font-bold">Powerful Features</h2>
+        <h2 className="text-3xl md:text-4xl font-bold">
+          Tout ce qu'il vous faut
+        </h2>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Everything you need to build modern web applications, all in one place
+          Un outil pensé pour les vendeurs de cuisine maison, sans la
+          complexité des logiciels professionnels.
         </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <Card className="bg-card/50 backdrop-blur-sm hover:shadow-xl transition-all duration-300 border-primary/10">
-          <CardHeader>
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <CardTitle className="text-2xl">Lightning Fast</CardTitle>
-            <CardDescription className="text-base">Experience unmatched performance</CardDescription>
-          </CardHeader>
-          <CardContent className="text-muted-foreground">
-            Built with the latest technologies to ensure your application runs at peak performance.
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card/50 backdrop-blur-sm hover:shadow-xl transition-all duration-300 border-primary/10">
-          <CardHeader>
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-            </div>
-            <CardTitle className="text-2xl">Dev with AI</CardTitle>
-            <CardDescription className="text-base">Increase your productivity with AI</CardDescription>
-          </CardHeader>
-          <CardContent className="text-muted-foreground">
-            Use AI to generate code, test, and debug your application.
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card/50 backdrop-blur-sm hover:shadow-xl transition-all duration-300 border-primary/10">
-          <CardHeader>
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-              </svg>
-            </div>
-            <CardTitle className="text-2xl">Modern UI</CardTitle>
-            <CardDescription className="text-base">Beautiful and responsive</CardDescription>
-          </CardHeader>
-          <CardContent className="text-muted-foreground">
-            Crafted with modern design principles for an exceptional user experience.
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {features.map((feature) => {
+          const Icon = feature.icon;
+          return (
+            <Card
+              key={feature.title}
+              className="bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all duration-300 border-primary/10 hover:border-primary/25 group"
+            >
+              <CardHeader>
+                <div className="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+                  <Icon className="w-5 h-5 text-primary" />
+                </div>
+                <CardTitle className="text-xl">{feature.title}</CardTitle>
+                <CardDescription>{feature.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="text-muted-foreground text-sm leading-relaxed">
+                {feature.body}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </SectionLayout>
   );
-} 
+}
