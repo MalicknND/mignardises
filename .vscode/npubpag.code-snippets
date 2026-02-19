@@ -1,0 +1,24 @@
+{
+  "Next public page": {
+    "prefix": "npubpag",
+    "description": "Create the base of a next public page",
+    "scope": "typescriptreact",
+    "body": [
+      "import type { PageParams } from \"@/types/next\";",
+      "",
+      "import { PublicLayout } from \"@/components/layouts/public-layout\"",
+      "import { SectionLayout } from \"@/components/layouts/section-layout\"",
+      "",
+      "export default async function RoutePage(props: PageParams<{ $1 }>) {",
+      "  return (",
+      "    <PublicLayout>",
+      "      <SectionLayout>",
+      "        <h1>Section title</h1>",
+      "        $2",
+      "      </SectionLayout>",
+      "    </PublicLayout>",
+      "  )",
+      "}",
+    ],
+  },
+}

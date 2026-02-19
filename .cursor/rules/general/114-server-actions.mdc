@@ -1,0 +1,105 @@
+---
+description: EXPLAIN how to create and USE server action with next-safe-action library
+globs: *.ts, *.tsx
+alwaysApply: false
+---
+## Context
+
+* Server Action is a way to execute server-side code like to mutate database etc... but without API endpoint. It's a React abstraction to handle the server-code.
+
+## Usage
+
+1. Server actions files have to be include in an _actions folder placed in the feature folder that need the action.
+2. When a server action is needed, check in the feature folder if an _actions folder exist. If not create a new one to the right place.
+3. Server actions code have to follow the below example rules part.  
+4. Server actions can be called from client OR server components.
+5. All server actions MUST USE the createAction wrapper `@/lib/actions/action-wrapper.ts`.
+6. All server actions MUST RETURN an object with data or error.
+  - From server component, throw an error if an error is returned by the action.
+  - From server component, display a toast from sonner if an error is returned by the action.
+7. When a server action set an API route call, ALWAYS use customFetch function from `@/lib/fetch.ts`.
+
+## Code examples
+
+1. When want to query Prisma inside a server action
+
+```ts
+"use server";
+
+import { createAction } from "@/lib/actions/action-wrapper";
+import { z } from "zod";
+import prisma from "@/lib/prisma";
+import { revalidateTag } from "next/cache";
+import { redirect } from "next/navigation";
+
+import { IPostAction } from "@/types/interfaces/common/IPostAction";
+
+const Schema = z.object({
+  email: z.string().email("Email invalide"),
+});
+
+type TInput = z.infer<typeof Schema>;
+
+export async function getExampleAction(input: TInput, postAction?: IPostAction): Promise<{ data?: ExampleModel, success?: boolean, error?: string }> {
+  const res: { data?: ExampleModel; error?: string } = await createAction({
+    input: input,
+    schema: Schema,
+    handler: async () => {
+      const user = await prisma.user.findUnique({
+        where: { email: input.email },
+      });
+
+      if (!user) return { error: "User not found" };
+      return { data: user };
+    }
+  });  
+
+  if (res.error) return { error: res.error };
+  if (postAction?.revalidateTags) postAction.revalidateTags.forEach((tag) => revalidateTag(tag));
+  if (postAction?.redirectPath) redirect(postAction.redirectPath);
+  return res.data ? { data: res.data } : { success: true };
+};
+```
+
+2. When want to call an API route from the server action
+
+```ts
+"use server";
+
+import { createAction } from "@/lib/actions/action-wrapper";
+import { z } from "zod";
+import { customFetch } from "@/lib/fetch";
+import { revalidateTag } from "next/cache";
+import { redirect } from "next/navigation";
+
+import { IUser } from "@/types/interfaces/user/IUser";
+import { IPostAction } from "@/types/interfaces/common/IPostAction";
+
+const Schema = z.object({
+  email: z.string().email("Email invalide"),
+});
+
+type TInput = z.infer<typeof Schema>;
+
+export async function getExampleAction(input: TInput, postAction?: IPostAction): Promise<{ data?: ExampleModel, success?: boolean, error?: string }> {
+  const res: { data?: ExampleModel; error?: string } = await createAction({
+    input: input,
+    schema: Schema,
+    handler: async () => {
+      return await customFetch({
+        url: `/api/example?email=${input.email}`,
+        method: "GET",
+        tags: ["getExample"]
+      });
+    }
+  });  
+
+  if (res.error) return { error: res.error };
+  if (postAction?.revalidateTags) postAction.revalidateTags.forEach((tag) => revalidateTag(tag));
+  if (postAction?.redirectPath) redirect(postAction.redirectPath);
+  return res.data ? { data: res.data } : { success: true };
+};
+```
+
+
+

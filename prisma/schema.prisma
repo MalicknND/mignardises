@@ -1,0 +1,253 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Basic User model example - Modify according to your needs
+model User {
+  id                   String            @id
+  name                 String
+  email                String
+  emailVerified        Boolean
+  image                String?
+  roles                Role[]            @default([USER])
+  createdAt            DateTime
+  updatedAt            DateTime
+  sessions             Session[]
+  accounts             Account[]
+  profile              UserProfile?
+  subscriptions        Subscription[]
+  stripeCustomerId     String?           @unique
+  ownedWorkspaces      Workspace[]       @relation("WorkspaceOwner")
+  workspaceMemberships WorkspaceMember[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+// Add your models below
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+model UserProfile {
+  id          String    @id @default(cuid())
+  birthDate   DateTime?
+  gender      Gender
+  phoneNumber String?
+  address     String?
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("user_profile")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model Subscription {
+  id                 String    @id @default(cuid())
+  userId             String
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeId           String    @unique
+  status             String
+  priceId            String
+  quantity           Int
+  cancelAtPeriodEnd  Boolean   @default(false)
+  cancelAt           DateTime?
+  canceledAt         DateTime?
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  endedAt            DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("subscription")
+}
+
+enum WorkspaceMemberRole {
+  OWNER
+  MEMBER
+}
+
+enum OrderStatus {
+  pending
+  preparing
+  delivered
+}
+
+enum PaymentStatus {
+  unpaid
+  deposit
+  paid
+}
+
+enum ExpenseCategory {
+  ingredients
+  packaging
+  transport
+  equipment
+  other
+}
+
+model Workspace {
+  id        String            @id @default(cuid())
+  name      String
+  ownerId   String
+  owner     User              @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members   WorkspaceMember[]
+  customers Customer[]
+  orders    Order[]
+  payments  OrderPayment[]
+  expenses  Expense[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@index([ownerId])
+  @@map("workspace")
+}
+
+model WorkspaceMember {
+  id          String              @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceMemberRole @default(MEMBER)
+  workspace   Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime            @default(now())
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+  @@map("workspace_member")
+}
+
+model Customer {
+  id          String    @id @default(cuid())
+  workspaceId String
+  name        String
+  phone       String
+  notes       String?
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  orders      Order[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([workspaceId, phone])
+  @@index([workspaceId])
+  @@map("customer")
+}
+
+model Order {
+  id            String         @id @default(cuid())
+  workspaceId   String
+  customerId    String
+  items         Json
+  totalPrice    Decimal        @db.Decimal(10, 2)
+  deliveryDate  DateTime
+  status        OrderStatus    @default(pending)
+  paymentStatus PaymentStatus  @default(unpaid)
+  notes         String?
+  workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  customer      Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orderPayments OrderPayment[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([workspaceId, deliveryDate])
+  @@index([customerId])
+  @@map("order")
+}
+
+model OrderPayment {
+  id          String    @id @default(cuid())
+  workspaceId String
+  orderId     String
+  amount      Decimal   @db.Decimal(10, 2)
+  paidAt      DateTime  @default(now())
+  note        String?
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@index([workspaceId, paidAt])
+  @@index([orderId])
+  @@map("order_payment")
+}
+
+model Expense {
+  id          String          @id @default(cuid())
+  workspaceId String
+  amount      Decimal         @db.Decimal(10, 2)
+  category    ExpenseCategory
+  date        DateTime
+  note        String?
+  workspace   Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([workspaceId, date])
+  @@map("expense")
+}

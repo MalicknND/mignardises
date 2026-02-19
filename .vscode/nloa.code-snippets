@@ -1,0 +1,19 @@
+{
+  "Next loading page": {
+    "prefix": "nloa",
+    "description": "Create the base of a loading page",
+    "scope": "typescriptreact",
+    "body": [
+      "import { Loader } from \"@/components/ui/loader\";",
+      "",
+      "export default async function RouteLoading() {",
+      "  return (",
+      "    <div className=\"w-screen h-screen flex flex-col items-center justify-center p-4 space-y-4\">",
+      "      <Loader size=\"md\" />",
+      "      <p className=\"text-muted-foreground\">Please wait...</p>",
+      "    </div>",
+      "  );",
+      "}",
+    ],
+  },
+}

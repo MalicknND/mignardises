@@ -1,0 +1,18 @@
+{
+  "Error Page": {
+    "prefix": "nerr",
+    "description": "Create a error page template",
+    "scope": "typescriptreact",
+    "body": [
+      "\"use client\";",
+      "",
+      "import ErrorPage from \"@/components/layouts/error-page\";",
+      "",
+      "export default function NextErrorPage() {",
+      "  return (",
+      "    <ErrorPage />",
+      "  );",
+      "}",
+    ],
+  },
+}

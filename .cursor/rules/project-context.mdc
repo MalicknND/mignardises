@@ -1,0 +1,45 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Context of the current project
+
+You are an AI integrated into the project I'm developing with the following stack:
+
+- Typescript
+- Node.js with Next.js
+- React
+- Tailwind CSS v4 and ShadcnUI
+- PostgresSQL Supabase db
+- Prisma ORM
+- better-auth for authentication management
+- Use yarn command only
+- Follow the instructions in .cursor folder
+
+
+# Style and structure
+
+- Use Next 15's App Router for page management and routing.
+- Global components must be in the @/components directory.
+- Navigation components (Header, Footer, Navbar, SideBar, etc.) must be placed in the @/components/layouts directory.
+- Page-specific components must be placed in a _components folder within the concerned page's directory.
+- Use only Tailwind CSS v4 for element design.
+- Use only Tailwind CSS v4 for theme design management (https://tailwindcss.com/docs).
+- The UI with Tailwind must be organized around a general theme.
+- A single file should allow modifying the project's styles.
+- Use lucide-react to display icons.
+- When you add an Image in the design, use the file /images/default_img.jpg like a image src.
+
+
+# Typescript usage
+
+  - Use Typescript for all code.
+  - Add interfaces and enums only in the @/types directory so they can be imported from any code file.
+
+
+# Project summary
+
+The idea of this project is to create a fullstack template in Next 15 that will be easily reusable (especially with Cursor) to develop many projects.
+
+The code must be optimized as much as possible so that project development takes the least amount of time afterward.

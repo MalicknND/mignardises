@@ -1,0 +1,40 @@
+---
+description: 
+globs: *.ts
+alwaysApply: false
+---
+## Context
+
+* We use Next API Routes to make functions that manipulate data in database.
+
+## Rules
+
+- All API Routes have to be organized in the @/api folder, it's better to set all API system in a same place.
+- For example, the signup POST route have to be place in @/app/api/auth/signup/route.ts file.
+- API routes use Prisma models to manipulate the database.
+- When a route require authentication, use the `@/lib/auth/auth-check.ts`to secure the route with the auth middleware.
+
+## Examples
+
+For an POST API route :
+
+```ts
+export async function POST(request: NextRequest) {
+  return withAuth(request, async () => {
+    try {
+      const body = await request.json();
+      const validatedData = ExampleSchema.parse(body);
+
+      // Do somethings here..
+
+      return NextResponse.json({}, { status: 201 });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json({ error: "Invalid request data", details: error.errors }, { status: 400 });
+      }
+
+      return NextResponse.json({ error: "Failed to create example" }, { status: 500 });
+    }
+  }, [Role.ADMIN, Role.USER]);
+}
+```

@@ -1,0 +1,82 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- Write concise, technical TypeScript code using functional and declarative programming patterns.
+- Avoid classes; prefer iteration and modularization over code duplication.
+- Use descriptive variable names with auxiliary verbs (e.g., `isLoading`, `hasError`).
+- Structure files into: exported component, subcomponents, helpers, static content, and types.
+
+## syntax-and-formatting
+
+- Avoid unnecessary curly braces in conditionals; use concise syntax for simple statements.
+- Write declarative JSX.
+
+## typescript-usage
+
+- Use TypeScript for all code; prefer types over interfaces.
+- Avoid enums; use maps instead.
+- Use functional components with TypeScript types.
+- Add interfaces and enums only in the @/types directory so they can be imported from any code file.
+
+## folders-structure
+
+- Cursor rules to follow in `@/.cursor`.
+- Next App router system
+- All project routes in `@/app` folder. Follow [105-nextjs-routes.mdc](mdc:.cursor/rules/general/105-nextjs-routes.mdc) to create new routes.
+- `@/components` folder must contains components reusables in entire project, like ui components (Shadcn UI), layouts components, providers components, etc.
+- `@/config` folder includes the main config project file, permit to manage some project elements.
+- `@/lib` folder must contains reusable libraries utils like prisma client, better auth utils, send email functions, storage functions, forms schemas, etc.
+- All Next API routes must be include in `@/app/api` folder, organized by project features (auth, users, etc.).
+- When a route page need specific components, create it in a _components folder in the route page folder.
+
+## components-rules
+
+- Follow [101-client-components.mdc](mdc:.cursor/rules/general/101-client-components.mdc) when need a client component.
+- Follow [107-server-components.mdc](mdc:.cursor/rules/general/107-server-components.mdc) when need a server component.
+- Follow [114-server-actions.mdc](mdc:.cursor/rules/general/114-server-actions.mdc) when need to manage server actions.
+- Follow [113-api-routes.mdc](mdc:.cursor/rules/general/113-api-routes.mdc) when need to manage API routes.
+
+## ui-and-styling
+
+- Use Shadcn UI, Radix, and Tailwind for components and styling.
+- Implement responsive design with Tailwind CSS using a mobile-first approach.
+- Use only date-fns to display dates in UI.
+- Follow [108-shadcn-ui.mdc](mdc:.cursor/rules/general/108-shadcn-ui.mdc) and [111-tailwind-styles.mdc](mdc:.cursor/rules/general/111-tailwind-styles.mdc) rules for designing pages and components.
+
+## form-management
+
+- Use a combination of react-hook-form and zod to manage forms in the project.
+- Use component `@/components/commmon/form-builder.tsx` when need to create new form in project.
+- Forms have to be construct on specific component file and set on the _components folder of the concerned part.
+- Set all zod schema in @/lib/schemas folder.
+
+## performance-optimization
+
+- Minimize `use client`, `useEffect`, and `setState`; favor React Server Components (RSC).
+- Wrap client components in `Suspense` with fallback.
+- Use dynamic loading for non-critical components.
+- Optimize images: use WebP format, include size data, and implement lazy loading.
+
+## database-querying-and-data-model-creation
+
+- Use Prisma ORM to query the database.
+- For data models, follow rules on [112-prisma.mdc](mdc:.cursor/rules/general/112-prisma.mdc) file.
+
+## key-conventions
+
+- Use 'nuqs' for URL search parameter state management.
+- Optimize Web Vitals (LCP, CLS, FID).
+- Limit 'use client': Favor server components and Next.js SSR for data fetching or state management.
+- Use 'use client' only for Web API access in small components.
+
+## Output
+
+- Always write code in English
+- Always write UI in English
+- Do not add comments
+
+## Terminal
+
+- AWLAYS use `yarn`

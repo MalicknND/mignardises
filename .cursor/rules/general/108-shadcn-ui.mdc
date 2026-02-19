@@ -1,0 +1,16 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+## Context
+
+* We use Shadcn/UI to style our application.
+
+## Rules
+
+- Each time you need a Shadcn UI component, check if required Shadcn UI component you need already exists in @/components/ui folder.
+- If doesn't exist in the ui folder, you must install ShadcnUI required components with command `npx shadcn@latest add <component-name>`.
+- If no ShadcnUI components to install and we need a new reusable components, create it in @/components/ui folder.
+- You must use Shadcn UI for components.
+- You must use Tailwind CSS for styling.

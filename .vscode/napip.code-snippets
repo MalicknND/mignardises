@@ -1,0 +1,37 @@
+{
+  "Next API POST Route with imports": {
+    "prefix": "napip",
+    "body": [
+      "import { NextResponse } from \"next/server\";",
+      "import type { NextRequest } from \"next/server\";",
+      "import { withAuth } from \"@/lib/auth/auth-check\";",
+      "import prisma from \"@/lib/prisma\";",
+      "import { z } from \"zod\";",
+      "",
+      "const ExampleSchema = z.object({",
+      "  title: z.string().min(1),",
+      "  description: z.string().optional(),",
+      "});",
+      "",
+      "export async function POST(request: NextRequest) {",
+      "  return withAuth(request, async () => {",
+      "    try {",
+      "      const body = await request.json();",
+      "      const validatedData = ExampleSchema.parse(body);",
+      "",
+      "      // Do somethings here..",
+      "",
+      "      return NextResponse.json({}, { status: 201 });",
+      "    } catch (error) {",
+      "      if (error instanceof z.ZodError) {",
+      "        return NextResponse.json({ error: \"Invalid request data\", details: error.errors }, { status: 400 });",
+      "      }",
+      "",
+      "      return NextResponse.json({ error: \"Failed to create example\" }, { status: 500 });",
+      "    }",
+      "  });",
+      "}"
+    ],
+    "description": "Creates a Next.js API route with POST method, validation schema and standard imports"
+  }
+}
