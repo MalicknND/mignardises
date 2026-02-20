@@ -34,15 +34,18 @@ export function AddSheet({
 }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto">
-        <SheetHeader>
+      <SheetContent
+        side="bottom"
+        className="flex flex-col max-h-[88dvh] gap-0 p-0"
+      >
+        <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b pr-12">
           <SheetTitle>Ajouter</SheetTitle>
           <SheetDescription>
             Créez une commande ou enregistrez une dépense.
           </SheetDescription>
         </SheetHeader>
 
-        <div className="px-4 pb-4 space-y-4">
+        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-8 space-y-4">
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant={mode === "order" ? "default" : "outline"}

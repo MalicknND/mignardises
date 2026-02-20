@@ -9,7 +9,7 @@ export default function LoggedLayout({
   return (
     <AddSheetProvider>
       <div className="min-h-screen bg-background">
-        <div className="mx-auto max-w-3xl px-4 pb-24 pt-4 md:px-6 md:pt-6">
+        <div className="mx-auto max-w-3xl px-4 pb-[calc(3.5rem+env(safe-area-inset-bottom,1rem))] pt-4 md:px-6 md:pt-6">
           <main>{children}</main>
         </div>
         <BottomNav />

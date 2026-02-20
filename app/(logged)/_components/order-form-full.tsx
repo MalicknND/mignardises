@@ -76,7 +76,7 @@ export function OrderFormFull({
         <div className="space-y-2">
           <label className="text-sm font-medium">Clients existants</label>
           <select
-            className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm"
+            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             onChange={(event) => {
               const customer = customers.find(
                 (item) => item.id === event.target.value,
@@ -183,7 +183,7 @@ export function OrderFormFull({
                 <FormLabel>Statut</FormLabel>
                 <FormControl>
                   <select
-                    className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm"
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     value={field.value}
                     onChange={field.onChange}
                   >
@@ -204,7 +204,7 @@ export function OrderFormFull({
                 <FormLabel>Paiement</FormLabel>
                 <FormControl>
                   <select
-                    className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm"
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     value={field.value}
                     onChange={field.onChange}
                   >

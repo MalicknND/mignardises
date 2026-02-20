@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Nunito, Fira_Code } from "next/font/google";
 import "./globals.css";
 import { projectConfig } from "@/config/project";
@@ -18,6 +18,12 @@ const secondaryFont = Fira_Code({
   subsets: ["latin"],
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: projectConfig.name,
