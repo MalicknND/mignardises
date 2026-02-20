@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OpenAddSheetButton } from "@/app/(logged)/_components/open-add-sheet-button";
 import { OrderCardLink } from "@/app/(logged)/_components/order-card-link";
@@ -10,11 +11,9 @@ import { getTodayData } from "@/lib/prisma/mignardise-queries";
 import { requireWorkspace } from "@/lib/workspace";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import type { TodayOrder } from "@/lib/prisma/mignardise-queries";
 
-export default async function TodayPage() {
-  const workspace = await requireWorkspace();
-  const { summary, todayOrders } = await getTodayData(workspace.id);
-
+export default function TodayPage() {
   return (
     <div className="space-y-6">
       <header className="rounded-xl bg-primary p-4 text-primary-foreground">
@@ -24,6 +23,19 @@ export default async function TodayPage() {
         </h1>
       </header>
 
+      <Suspense fallback={<TodaySkeleton />}>
+        <TodayContent />
+      </Suspense>
+    </div>
+  );
+}
+
+async function TodayContent() {
+  const workspace = await requireWorkspace();
+  const { summary, todayOrders } = await getTodayData(workspace.id);
+
+  return (
+    <>
       <section className="grid grid-cols-2 gap-3">
         <Card>
           <CardHeader className="pb-2">
@@ -82,56 +94,85 @@ export default async function TodayPage() {
         </p>
       </section>
 
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Commandes du jour</h2>
-          <OpenAddSheetButton mode="order">Ajouter commande</OpenAddSheetButton>
-        </div>
+      <TodayOrders orders={todayOrders} />
+    </>
+  );
+}
 
-        {todayOrders.length === 0 ? (
-          <Card>
-            <CardContent className="p-4 text-sm text-muted-foreground">
-              Aucune commande prévue aujourd&apos;hui.
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {todayOrders.map((order) => (
-              <article
-                key={order.id}
-                id={`order-${order.id}`}
-                className="relative rounded-xl border bg-card p-4"
-              >
-                <OrderCardLink
-                  href={`/orders/${order.id}`}
-                  label={`Voir la commande de ${order.customerName}`}
-                />
-                <div className="relative z-0 space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="font-semibold">{order.customerName}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {formatMoney(order.totalPrice)}
-                    </p>
-                  </div>
+function TodayOrders({ orders }: { orders: TodayOrder[] }) {
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Commandes du jour</h2>
+        <OpenAddSheetButton mode="order">Ajouter commande</OpenAddSheetButton>
+      </div>
+
+      {orders.length === 0 ? (
+        <Card>
+          <CardContent className="p-4 text-sm text-muted-foreground">
+            Aucune commande prévue aujourd&apos;hui.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {orders.map((order) => (
+            <article
+              key={order.id}
+              id={`order-${order.id}`}
+              className="relative rounded-xl border bg-card p-4"
+            >
+              <OrderCardLink
+                href={`/orders/${order.id}`}
+                label={`Voir la commande de ${order.customerName}`}
+              />
+              <div className="relative z-0 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-semibold">{order.customerName}</h3>
                   <p className="text-sm text-muted-foreground">
-                    {
-                      orderStatusLabel[
-                        order.status as keyof typeof orderStatusLabel
-                      ]
-                    }{" "}
-                    •{" "}
-                    {
-                      paymentStatusLabel[
-                        order.paymentStatus as keyof typeof paymentStatusLabel
-                      ]
-                    }
+                    {formatMoney(order.totalPrice)}
                   </p>
                 </div>
-              </article>
-            ))}
+                <p className="text-sm text-muted-foreground">
+                  {orderStatusLabel[order.status as keyof typeof orderStatusLabel]}{" "}
+                  •{" "}
+                  {paymentStatusLabel[order.paymentStatus as keyof typeof paymentStatusLabel]}
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function TodaySkeleton() {
+  return (
+    <>
+      <section className="grid grid-cols-2 gap-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="animate-pulse rounded-xl border bg-card p-4">
+            <div className="mb-3 h-3 w-16 rounded bg-muted" />
+            <div className="h-5 w-20 rounded bg-muted" />
           </div>
-        )}
+        ))}
       </section>
-    </div>
+      <div className="animate-pulse rounded-xl border bg-card p-4">
+        <div className="mb-2 h-3 w-48 rounded bg-muted" />
+        <div className="h-3 w-32 rounded bg-muted" />
+      </div>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="h-5 w-36 animate-pulse rounded bg-muted" />
+          <div className="h-8 w-32 animate-pulse rounded bg-muted" />
+        </div>
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="animate-pulse rounded-xl border bg-card p-4">
+            <div className="mb-2 h-4 w-32 rounded bg-muted" />
+            <div className="h-3 w-24 rounded bg-muted" />
+          </div>
+        ))}
+      </div>
+    </>
   );
 }

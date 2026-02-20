@@ -24,9 +24,10 @@ export const expenseCategoryLabel: Record<ExpenseCategory, string> = {
   other: "Autre",
 };
 
-export const formatMoney = (value: number) =>
-  new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "XOF",
-    maximumFractionDigits: 0,
-  }).format(value);
+const moneyFormatter = new Intl.NumberFormat("fr-FR", {
+  style: "currency",
+  currency: "XOF",
+  maximumFractionDigits: 0,
+});
+
+export const formatMoney = (value: number) => moneyFormatter.format(value);

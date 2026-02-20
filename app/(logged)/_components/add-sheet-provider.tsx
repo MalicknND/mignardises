@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import { getCustomersForSheetAction } from "@/app/_actions/mignardise.action";
 
 type AddSheetMode = "order" | "expense";
 
@@ -30,13 +31,12 @@ const DynamicAddSheet = dynamic(
 
 export function AddSheetProvider({
   children,
-  customers,
 }: {
   children: React.ReactNode;
-  customers: SheetCustomer[];
 }) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<AddSheetMode>("order");
+  const [customers, setCustomers] = useState<SheetCustomer[]>([]);
 
   const value = useMemo(
     () => ({
@@ -45,11 +45,14 @@ export function AddSheetProvider({
       openSheet: (nextMode: AddSheetMode = "order") => {
         setMode(nextMode);
         setOpen(true);
+        if (customers.length === 0) {
+          getCustomersForSheetAction().then(setCustomers);
+        }
       },
       closeSheet: () => setOpen(false),
       setMode,
     }),
-    [open, mode],
+    [open, mode, customers.length],
   );
 
   return (

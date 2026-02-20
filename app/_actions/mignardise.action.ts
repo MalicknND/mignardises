@@ -229,37 +229,35 @@ export async function markCustomerPaidAction(
             customerId: validatedInput.customerId,
           },
           include: {
-            orderPayments: {
-              select: { amount: true },
-            },
+            orderPayments: { select: { amount: true } },
           },
         });
 
-        for (const order of orders) {
-          const totalPaid = order.orderPayments.reduce(
-            (acc, payment) => acc + Number(payment.amount),
-            0,
-          );
-          const remaining = Number(order.totalPrice) - totalPaid;
+        const ordersWithDebt = orders
+          .map((order) => {
+            const totalPaid = order.orderPayments.reduce(
+              (acc, p) => acc + Number(p.amount),
+              0,
+            );
+            return { id: order.id, remaining: Number(order.totalPrice) - totalPaid };
+          })
+          .filter((o) => o.remaining > 0);
 
-          if (remaining <= 0) {
-            continue;
-          }
+        if (ordersWithDebt.length === 0) return;
 
-          await tx.orderPayment.create({
-            data: {
-              workspaceId: workspace.id,
-              orderId: order.id,
-              amount: decimal(remaining),
-              note: validatedInput.note ?? "Paiement total depuis Dettes",
-            },
-          });
+        await tx.orderPayment.createMany({
+          data: ordersWithDebt.map((o) => ({
+            workspaceId: workspace.id,
+            orderId: o.id,
+            amount: decimal(o.remaining),
+            note: validatedInput.note ?? "Paiement total depuis Dettes",
+          })),
+        });
 
-          await tx.order.update({
-            where: { id: order.id },
-            data: { paymentStatus: "paid" },
-          });
-        }
+        await tx.order.updateMany({
+          where: { id: { in: ordersWithDebt.map((o) => o.id) } },
+          data: { paymentStatus: "paid" },
+        });
       });
 
       revalidatePath("/today");
@@ -268,5 +266,14 @@ export async function markCustomerPaidAction(
 
       return { success: true };
     },
+  });
+}
+
+export async function getCustomersForSheetAction() {
+  const workspace = await requireWorkspace();
+  return prisma.customer.findMany({
+    where: { workspaceId: workspace.id },
+    select: { id: true, name: true, phone: true },
+    orderBy: { name: "asc" },
   });
 }

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OpenAddSheetButton } from "@/app/(logged)/_components/open-add-sheet-button";
 import { OrderCardLink } from "@/app/(logged)/_components/order-card-link";
@@ -11,17 +12,26 @@ import { getOrders } from "@/lib/prisma/mignardise-queries";
 import { requireWorkspace } from "@/lib/workspace";
 import { format } from "date-fns";
 
-export default async function OrdersPage() {
-  const workspace = await requireWorkspace();
-  const orders = await getOrders(workspace.id);
-
+export default function OrdersPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Commandes</h1>
         <OpenAddSheetButton mode="order">Nouvelle commande</OpenAddSheetButton>
       </div>
+      <Suspense fallback={<OrdersSkeleton />}>
+        <OrdersContent />
+      </Suspense>
+    </div>
+  );
+}
 
+async function OrdersContent() {
+  const workspace = await requireWorkspace();
+  const orders = await getOrders(workspace.id);
+
+  return (
+    <>
       <div className="space-y-3 md:hidden">
         {orders.length === 0 ? (
           <div className="rounded-xl border bg-card p-8 text-center space-y-3">
@@ -30,10 +40,7 @@ export default async function OrdersPage() {
           </div>
         ) : (
           orders.map((order) => (
-            <article
-              key={order.id}
-              className="relative rounded-xl border bg-card p-4"
-            >
+            <article key={order.id} className="relative rounded-xl border bg-card p-4">
               <OrderCardLink
                 href={`/orders/${order.id}`}
                 label={`Voir la commande ${order.customerName}`}
@@ -48,8 +55,7 @@ export default async function OrdersPage() {
                   {paymentStatusLabel[order.paymentStatus]}
                 </p>
                 <p className="text-sm">
-                  {formatMoney(order.paidAmount)} /{" "}
-                  {formatMoney(order.totalPrice)}
+                  {formatMoney(order.paidAmount)} / {formatMoney(order.totalPrice)}
                 </p>
               </div>
             </article>
@@ -83,17 +89,11 @@ export default async function OrdersPage() {
                 {orders.map((order) => (
                   <tr key={order.id} className="border-b">
                     <td className="py-2">{order.customerName}</td>
-                    <td className="py-2">
-                      {format(order.deliveryDate, "dd/MM/yyyy")}
-                    </td>
+                    <td className="py-2">{format(order.deliveryDate, "dd/MM/yyyy")}</td>
                     <td className="py-2">{orderStatusLabel[order.status]}</td>
-                    <td className="py-2">
-                      {paymentStatusLabel[order.paymentStatus]}
-                    </td>
+                    <td className="py-2">{paymentStatusLabel[order.paymentStatus]}</td>
                     <td className="py-2">{formatMoney(order.totalPrice)}</td>
-                    <td className="py-2">
-                      <OrderRowLink href={`/orders/${order.id}`} />
-                    </td>
+                    <td className="py-2"><OrderRowLink href={`/orders/${order.id}`} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -101,6 +101,27 @@ export default async function OrdersPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </>
+  );
+}
+
+function OrdersSkeleton() {
+  return (
+    <>
+      <div className="space-y-3 md:hidden">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="animate-pulse rounded-xl border bg-card p-4 space-y-2">
+            <div className="h-4 w-32 rounded bg-muted" />
+            <div className="h-3 w-24 rounded bg-muted" />
+            <div className="h-3 w-20 rounded bg-muted" />
+          </div>
+        ))}
+      </div>
+      <div className="hidden md:block animate-pulse rounded-xl border bg-card p-6 space-y-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-4 w-full rounded bg-muted" />
+        ))}
+      </div>
+    </>
   );
 }

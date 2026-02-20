@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -18,10 +19,6 @@ import type { PageParams } from "@/types/next";
 
 export default async function OrderDetailPage({ params }: PageParams<{ id: string }>) {
   const { id } = await params;
-  const workspace = await requireWorkspace();
-  const order = await getOrderById(workspace.id, id);
-
-  if (!order) notFound();
 
   return (
     <div className="space-y-4 pb-4">
@@ -34,7 +31,21 @@ export default async function OrderDetailPage({ params }: PageParams<{ id: strin
           Commandes
         </Link>
       </div>
+      <Suspense fallback={<OrderDetailSkeleton />}>
+        <OrderDetailContent id={id} />
+      </Suspense>
+    </div>
+  );
+}
 
+async function OrderDetailContent({ id }: { id: string }) {
+  const workspace = await requireWorkspace();
+  const order = await getOrderById(workspace.id, id);
+
+  if (!order) notFound();
+
+  return (
+    <>
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold">{order.customer.name}</h1>
@@ -62,18 +73,14 @@ export default async function OrderDetailPage({ params }: PageParams<{ id: strin
           {order.items.length > 0 ? (
             <ul className="space-y-1">
               {order.items.map((item, i) => (
-                <li key={i} className="text-sm py-1 border-b last:border-0">
-                  {item}
-                </li>
+                <li key={i} className="text-sm py-1 border-b last:border-0">{item}</li>
               ))}
             </ul>
           ) : (
             <p className="text-sm text-muted-foreground">Aucun article renseigné.</p>
           )}
           {order.notes && (
-            <p className="mt-3 text-sm text-muted-foreground italic">
-              {order.notes}
-            </p>
+            <p className="mt-3 text-sm text-muted-foreground italic">{order.notes}</p>
           )}
         </CardContent>
       </Card>
@@ -139,6 +146,27 @@ export default async function OrderDetailPage({ params }: PageParams<{ id: strin
           />
         </CardContent>
       </Card>
-    </div>
+    </>
+  );
+}
+
+function OrderDetailSkeleton() {
+  return (
+    <>
+      <div className="flex items-start justify-between animate-pulse">
+        <div className="space-y-2">
+          <div className="h-6 w-40 rounded bg-muted" />
+          <div className="h-4 w-28 rounded bg-muted" />
+        </div>
+        <div className="h-10 w-24 rounded bg-muted" />
+      </div>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="animate-pulse rounded-xl border bg-card p-4 space-y-3">
+          <div className="h-4 w-24 rounded bg-muted" />
+          <div className="h-3 w-full rounded bg-muted" />
+          <div className="h-3 w-3/4 rounded bg-muted" />
+        </div>
+      ))}
+    </>
   );
 }

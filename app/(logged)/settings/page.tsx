@@ -1,14 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { getSession } from "@/lib/auth/get-session";
 import { ProfileForm } from "./_components/profile-form";
 import { ChangePasswordForm } from "./_components/change-password-form";
 import { LogoutButton } from "./_components/logout-button";
 import { User, Lock, LogOut } from "lucide-react";
 
 export default async function SettingsPage() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   const user = session?.user;
 
   return (

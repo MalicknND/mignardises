@@ -25,75 +25,60 @@ export type CustomerDebt = {
   debt: number;
 };
 
+type DebtSummaryRow = { debt_count: bigint; receivable: Prisma.Decimal };
+
 export const getTodayData = async (workspaceId: string, date = new Date()) => {
   const dayStart = startOfDay(date);
   const dayEnd = endOfDay(date);
 
-  const [receivedAggregate, expenseAggregate, todayOrdersRaw, customersRaw] =
-    await prisma.$transaction([
+  const [receivedAggregate, expenseAggregate, todayOrdersRaw, debtSummaryRows] =
+    await Promise.all([
       prisma.orderPayment.aggregate({
         where: {
           workspaceId,
-          paidAt: {
-            gte: dayStart,
-            lte: dayEnd,
-          },
+          paidAt: { gte: dayStart, lte: dayEnd },
         },
-        _sum: {
-          amount: true,
-        },
+        _sum: { amount: true },
       }),
       prisma.expense.aggregate({
         where: {
           workspaceId,
-          date: {
-            gte: dayStart,
-            lte: dayEnd,
-          },
+          date: { gte: dayStart, lte: dayEnd },
         },
-        _sum: {
-          amount: true,
-        },
+        _sum: { amount: true },
       }),
       prisma.order.findMany({
         where: {
           workspaceId,
-          deliveryDate: {
-            gte: dayStart,
-            lte: dayEnd,
-          },
+          deliveryDate: { gte: dayStart, lte: dayEnd },
         },
         include: {
           customer: true,
-          orderPayments: {
-            select: {
-              amount: true,
-            },
-          },
+          orderPayments: { select: { amount: true } },
         },
-        orderBy: {
-          deliveryDate: "asc",
-        },
+        orderBy: { deliveryDate: "asc" },
       }),
-      prisma.customer.findMany({
-        where: { workspaceId },
-        include: {
-          orders: {
-            select: {
-              id: true,
-              totalPrice: true,
-              orderPayments: {
-                select: {
-                  amount: true,
-                },
-              },
-            },
-          },
-        },
-        orderBy: {
-          name: "asc",
-        },
-      }),
+      prisma.$queryRaw<DebtSummaryRow[]>`
+        SELECT
+          COUNT(*) AS debt_count,
+          COALESCE(SUM(orders_agg.total_orders - COALESCE(payments_agg.total_paid, 0)), 0) AS receivable
+        FROM customer c
+        JOIN (
+          SELECT "customerId", SUM("totalPrice") AS total_orders
+          FROM "order"
+          WHERE "workspaceId" = ${workspaceId}
+          GROUP BY "customerId"
+        ) orders_agg ON orders_agg."customerId" = c.id
+        LEFT JOIN (
+          SELECT o."customerId", SUM(op.amount) AS total_paid
+          FROM order_payment op
+          JOIN "order" o ON o.id = op."orderId"
+          WHERE o."workspaceId" = ${workspaceId}
+          GROUP BY o."customerId"
+        ) payments_agg ON payments_agg."customerId" = c.id
+        WHERE c."workspaceId" = ${workspaceId}
+          AND orders_agg.total_orders > COALESCE(payments_agg.total_paid, 0)
+      `,
     ]);
 
   const todayOrders: TodayOrder[] = todayOrdersRaw.map((order) => {
@@ -101,7 +86,6 @@ export const getTodayData = async (workspaceId: string, date = new Date()) => {
       (acc, payment) => acc + decimalToNumber(payment.amount),
       0,
     );
-
     return {
       id: order.id,
       customerName: order.customer.name,
@@ -114,65 +98,37 @@ export const getTodayData = async (workspaceId: string, date = new Date()) => {
     };
   });
 
-  const debts: CustomerDebt[] = customersRaw
-    .map((customer) => {
-      const totalOrders = customer.orders.reduce(
-        (acc, order) => acc + decimalToNumber(order.totalPrice),
-        0,
-      );
-      const totalPaid = customer.orders.reduce(
-        (acc, order) =>
-          acc +
-          order.orderPayments.reduce(
-            (subAcc, payment) => subAcc + decimalToNumber(payment.amount),
-            0,
-          ),
-        0,
-      );
-      const debt = totalOrders - totalPaid;
-
-      return {
-        customerId: customer.id,
-        customerName: customer.name,
-        phone: customer.phone,
-        totalOrders,
-        totalPaid,
-        debt,
-      };
-    })
-    .filter((customer) => customer.debt > 0);
-
   const received = decimalToNumber(receivedAggregate._sum.amount);
   const spent = decimalToNumber(expenseAggregate._sum.amount);
+  const debtRow = debtSummaryRows[0] ?? {
+    debt_count: BigInt(0),
+    receivable: new Prisma.Decimal(0),
+  };
 
   return {
     summary: {
       received,
       spent,
       balance: received - spent,
-      receivable: debts.reduce((acc, item) => acc + item.debt, 0),
-      preparingCount: todayOrders.filter(
-        (order) => order.status !== "delivered",
-      ).length,
-      debtCustomersCount: debts.length,
+      receivable: decimalToNumber(debtRow.receivable),
+      preparingCount: todayOrders.filter((o) => o.status !== "delivered")
+        .length,
+      debtCustomersCount: Number(debtRow.debt_count),
     },
     todayOrders,
-    debts,
   };
 };
 
-export const getOrders = async (workspaceId: string) => {
+export const getOrders = async (workspaceId: string, page = 1, limit = 50) => {
   const orders = await prisma.order.findMany({
     where: { workspaceId },
     include: {
       customer: true,
-      orderPayments: {
-        select: { amount: true },
-      },
+      orderPayments: { select: { amount: true } },
     },
-    orderBy: {
-      deliveryDate: "desc",
-    },
+    orderBy: { deliveryDate: "desc" },
+    take: limit,
+    skip: (page - 1) * limit,
   });
 
   return orders.map((order) => ({
@@ -189,50 +145,51 @@ export const getOrders = async (workspaceId: string) => {
   }));
 };
 
+type DebtRow = {
+  customer_id: string;
+  customer_name: string;
+  phone: string;
+  total_orders: Prisma.Decimal;
+  total_paid: Prisma.Decimal;
+  debt: Prisma.Decimal;
+};
+
 export const getDebts = async (workspaceId: string) => {
-  const customers = await prisma.customer.findMany({
-    where: { workspaceId },
-    include: {
-      orders: {
-        select: {
-          totalPrice: true,
-          orderPayments: {
-            select: { amount: true },
-          },
-        },
-      },
-    },
-    orderBy: {
-      name: "asc",
-    },
-  });
+  const rows = await prisma.$queryRaw<DebtRow[]>`
+    SELECT
+      c.id AS customer_id,
+      c.name AS customer_name,
+      c.phone,
+      orders_agg.total_orders,
+      COALESCE(payments_agg.total_paid, 0) AS total_paid,
+      orders_agg.total_orders - COALESCE(payments_agg.total_paid, 0) AS debt
+    FROM customer c
+    JOIN (
+      SELECT "customerId", SUM("totalPrice") AS total_orders
+      FROM "order"
+      WHERE "workspaceId" = ${workspaceId}
+      GROUP BY "customerId"
+    ) orders_agg ON orders_agg."customerId" = c.id
+    LEFT JOIN (
+      SELECT o."customerId", SUM(op.amount) AS total_paid
+      FROM order_payment op
+      JOIN "order" o ON o.id = op."orderId"
+      WHERE o."workspaceId" = ${workspaceId}
+      GROUP BY o."customerId"
+    ) payments_agg ON payments_agg."customerId" = c.id
+    WHERE c."workspaceId" = ${workspaceId}
+      AND orders_agg.total_orders > COALESCE(payments_agg.total_paid, 0)
+    ORDER BY c.name ASC
+  `;
 
-  return customers
-    .map((customer) => {
-      const totalOrders = customer.orders.reduce(
-        (acc, order) => acc + decimalToNumber(order.totalPrice),
-        0,
-      );
-      const totalPaid = customer.orders.reduce(
-        (acc, order) =>
-          acc +
-          order.orderPayments.reduce(
-            (subAcc, payment) => subAcc + decimalToNumber(payment.amount),
-            0,
-          ),
-        0,
-      );
-
-      return {
-        customerId: customer.id,
-        customerName: customer.name,
-        phone: customer.phone,
-        totalOrders,
-        totalPaid,
-        debt: totalOrders - totalPaid,
-      };
-    })
-    .filter((customer) => customer.debt > 0);
+  return rows.map((row) => ({
+    customerId: row.customer_id,
+    customerName: row.customer_name,
+    phone: row.phone,
+    totalOrders: decimalToNumber(row.total_orders),
+    totalPaid: decimalToNumber(row.total_paid),
+    debt: decimalToNumber(row.debt),
+  }));
 };
 
 export const getOrderById = async (workspaceId: string, orderId: string) => {
@@ -240,9 +197,7 @@ export const getOrderById = async (workspaceId: string, orderId: string) => {
     where: { id: orderId, workspaceId },
     include: {
       customer: true,
-      orderPayments: {
-        orderBy: { paidAt: "asc" },
-      },
+      orderPayments: { orderBy: { paidAt: "asc" } },
     },
   });
 
@@ -278,12 +233,18 @@ export const getOrderById = async (workspaceId: string, orderId: string) => {
 };
 
 export const getExpenses = async (workspaceId: string) => {
-  const expenses = await prisma.expense.findMany({
-    where: { workspaceId },
-    orderBy: {
-      date: "desc",
-    },
-  });
+  const [expenses, categoryAggregates] = await Promise.all([
+    prisma.expense.findMany({
+      where: { workspaceId },
+      orderBy: { date: "desc" },
+      take: 100,
+    }),
+    prisma.expense.groupBy({
+      by: ["category"],
+      where: { workspaceId },
+      _sum: { amount: true },
+    }),
+  ]);
 
   const byCategory = Object.values(ExpenseCategory).reduce(
     (acc, category) => {
@@ -293,8 +254,8 @@ export const getExpenses = async (workspaceId: string) => {
     {} as Record<ExpenseCategory, number>,
   );
 
-  for (const expense of expenses) {
-    byCategory[expense.category] += decimalToNumber(expense.amount);
+  for (const row of categoryAggregates) {
+    byCategory[row.category] = decimalToNumber(row._sum.amount);
   }
 
   return {
