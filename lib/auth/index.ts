@@ -9,17 +9,18 @@ import { Role } from "../generated/prisma";
 
 const {
   NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-  NEXT_PUBLIC_GOOGLE_CLIENT_SECRET,
+  GOOGLE_CLIENT_SECRET,
+  NEXT_PUBLIC_BASE_URL,
 } = process.env;
 
 export const auth = betterAuth({
+  baseURL: NEXT_PUBLIC_BASE_URL,
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   user: {
     additionalFields: {
       roles: {
-        type: "string",
-        enum: Role,
-        default: Role.USER,
+        type: "string[]",
+        default: [Role.USER],
       },
       stripeCustomerId: {
         type: "string",
@@ -44,10 +45,10 @@ export const auth = betterAuth({
     }, 
   },
   socialProviders: {
-    ...(!!NEXT_PUBLIC_GOOGLE_CLIENT_ID && !!NEXT_PUBLIC_GOOGLE_CLIENT_SECRET) && {
+    ...(!!NEXT_PUBLIC_GOOGLE_CLIENT_ID && !!GOOGLE_CLIENT_SECRET) && {
       google: {
         clientId: NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
-        clientSecret: NEXT_PUBLIC_GOOGLE_CLIENT_SECRET!,
+        clientSecret: GOOGLE_CLIENT_SECRET!,
       }
     }
   },
