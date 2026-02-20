@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import { WorkspaceMemberRole } from "@/lib/generated/prisma";
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import { getSession } from "@/lib/auth/auth-utils";
+import { getSession } from "@/lib/auth/get-session";
 
 export const requireWorkspace = cache(async () => {
   const session = await getSession();
