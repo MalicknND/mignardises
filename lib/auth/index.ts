@@ -15,6 +15,7 @@ const {
 
 export const auth = betterAuth({
   baseURL: NEXT_PUBLIC_BASE_URL,
+  trustedOrigins: NEXT_PUBLIC_BASE_URL ? [NEXT_PUBLIC_BASE_URL] : undefined,
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   user: {
     additionalFields: {
