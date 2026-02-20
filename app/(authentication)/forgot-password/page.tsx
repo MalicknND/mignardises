@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
-import { forgetPassword } from '@/lib/auth/auth-client'
+import { requestPasswordReset } from '@/lib/auth/auth-client'
 
 const ForgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -38,7 +38,7 @@ export default function ForgotPasswordPage() {
       setError('')
       setSuccess(false)
       
-      await forgetPassword({
+      await requestPasswordReset({
         email: data.email,
         redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password`,
       })

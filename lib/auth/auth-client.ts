@@ -4,7 +4,7 @@ export const {
     signIn,
     signUp,
     signOut,
-    forgetPassword,
+    requestPasswordReset,
     resetPassword,
     getSession,
     useSession,

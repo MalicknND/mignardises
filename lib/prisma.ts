@@ -16,9 +16,11 @@ const pool =
 const adapter = new PrismaPg(pool);
 const accelerateUrl = process.env.PRISMA_ACCELERATE_URL;
 
-const clientConfig = accelerateUrl ? { accelerateUrl } : { adapter };
-
-const prisma = globalForPrisma.prisma ?? new PrismaClient(clientConfig);
+const prisma =
+  globalForPrisma.prisma ??
+  (accelerateUrl
+    ? new PrismaClient({ accelerateUrl })
+    : new PrismaClient({ adapter }));
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;

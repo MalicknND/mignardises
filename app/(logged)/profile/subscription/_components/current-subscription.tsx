@@ -17,7 +17,7 @@ export function CurrentSubscription() {
   const isActive = subscription.status === 'active'
   
   const handlePortalAccess = async () => {
-    const result = await getPortalUrlAction({})
+    const result = await getPortalUrlAction()
     if (result.error) return toastSystem.error(result.error)
     if (result.data?.url) window.location.href = result.data.url
   }
