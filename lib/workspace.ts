@@ -1,12 +1,11 @@
-import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { WorkspaceMemberRole } from "@/lib/generated/prisma";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
+import { getSession } from "@/lib/auth/auth-utils";
 
 export const requireWorkspace = cache(async () => {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   const user = session?.user;
 
   if (!user) {

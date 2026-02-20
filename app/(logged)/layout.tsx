@@ -1,7 +1,4 @@
-import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import { AddSheetProvider } from "@/app/(logged)/_components/add-sheet-provider";
 import { BottomNav } from "@/app/(logged)/_components/bottom-nav";
 import { requireWorkspace } from "@/lib/workspace";
@@ -11,13 +8,6 @@ export default async function LoggedLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  const user: any = session?.user;
-
-  if (!user) {
-    redirect("/login");
-  }
-
   const workspace = await requireWorkspace();
   const customers = await prisma.customer.findMany({
     where: { workspaceId: workspace.id },
