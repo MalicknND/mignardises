@@ -235,6 +235,48 @@ export const getDebts = async (workspaceId: string) => {
     .filter((customer) => customer.debt > 0);
 };
 
+export const getOrderById = async (workspaceId: string, orderId: string) => {
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, workspaceId },
+    include: {
+      customer: true,
+      orderPayments: {
+        orderBy: { paidAt: "asc" },
+      },
+    },
+  });
+
+  if (!order) return null;
+
+  const paidAmount = order.orderPayments.reduce(
+    (acc, p) => acc + decimalToNumber(p.amount),
+    0,
+  );
+
+  return {
+    id: order.id,
+    customer: {
+      id: order.customer.id,
+      name: order.customer.name,
+      phone: order.customer.phone,
+    },
+    items: order.items as string[],
+    totalPrice: decimalToNumber(order.totalPrice),
+    paidAmount,
+    remaining: decimalToNumber(order.totalPrice) - paidAmount,
+    deliveryDate: order.deliveryDate,
+    status: order.status,
+    paymentStatus: order.paymentStatus,
+    notes: order.notes,
+    payments: order.orderPayments.map((p) => ({
+      id: p.id,
+      amount: decimalToNumber(p.amount),
+      paidAt: p.paidAt,
+      note: p.note,
+    })),
+  };
+};
+
 export const getExpenses = async (workspaceId: string) => {
   const expenses = await prisma.expense.findMany({
     where: { workspaceId },

@@ -105,6 +105,7 @@ export async function updateOrderAction(
 
       revalidatePath("/today");
       revalidatePath("/orders");
+      revalidatePath(`/orders/${validatedInput.orderId}`);
 
       return { success: true };
     },
@@ -172,6 +173,7 @@ export async function addPaymentAction(
       revalidatePath("/today");
       revalidatePath("/orders");
       revalidatePath("/debts");
+      revalidatePath(`/orders/${validatedInput.orderId}`);
 
       return { success: true };
     },

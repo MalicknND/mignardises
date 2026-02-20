@@ -103,7 +103,7 @@ export default async function TodayPage() {
                 className="relative rounded-xl border bg-card p-4"
               >
                 <OrderCardLink
-                  href={`/orders#order-${order.id}`}
+                  href={`/orders/${order.id}`}
                   label={`Voir la commande de ${order.customerName}`}
                 />
                 <div className="relative z-0 space-y-2">
