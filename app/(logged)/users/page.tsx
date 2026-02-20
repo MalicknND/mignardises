@@ -9,13 +9,15 @@ export default function UsersPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Users</h1>
       </div>
-      
+
       <div className="space-y-4">
-        <UsersSearch />
+        <Suspense fallback={null}>
+          <UsersSearch />
+        </Suspense>
         <Suspense fallback={<div>Loading...</div>}>
           <UsersTable />
         </Suspense>
       </div>
     </div>
   );
-} 
+}
